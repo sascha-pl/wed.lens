@@ -1,0 +1,19 @@
+.env
+.env.*
+!.env.development
+!.env.production.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# JavaScript
+frontend/node_modules/
+frontend/dist/
+
+# IDEs and OS files
+.idea/
+.DS_Store

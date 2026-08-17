@@ -1,0 +1,57 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      API_UPSTREAM: ${API_UPSTREAM:?API_UPSTREAM must be set in the selected environment file}
+    ports:
+      - "${FRONTEND_BIND_ADDRESS:?FRONTEND_BIND_ADDRESS must be set in the selected environment file}:${FRONTEND_HOST_PORT:?FRONTEND_HOST_PORT must be set in the selected environment file}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_ENV: ${APP_ENV:?APP_ENV must be set in the selected environment file}
+      APP_NAME: ${APP_NAME:?APP_NAME must be set in the selected environment file}
+      DEBUG: ${DEBUG:?DEBUG must be set in the selected environment file}
+      LOG_LEVEL: ${LOG_LEVEL:?LOG_LEVEL must be set in the selected environment file}
+      API_PREFIX: ${API_PREFIX:?API_PREFIX must be set in the selected environment file}
+      CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS must be set in the selected environment file}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set in the selected environment file}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in the selected environment file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in the selected environment file}
+      POSTGRES_HOST: ${POSTGRES_HOST:?POSTGRES_HOST must be set in the selected environment file}
+      POSTGRES_PORT: ${POSTGRES_PORT:?POSTGRES_PORT must be set in the selected environment file}
+    ports:
+      - "${BACKEND_BIND_ADDRESS:?BACKEND_BIND_ADDRESS must be set in the selected environment file}:${BACKEND_HOST_PORT:?BACKEND_HOST_PORT must be set in the selected environment file}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set in the selected environment file}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in the selected environment file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in the selected environment file}
+    ports:
+      - "${POSTGRES_BIND_ADDRESS:?POSTGRES_BIND_ADDRESS must be set in the selected environment file}:${POSTGRES_HOST_PORT:?POSTGRES_HOST_PORT must be set in the selected environment file}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres_data:
