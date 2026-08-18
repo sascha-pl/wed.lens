@@ -20,14 +20,14 @@ class CreateUserResponse(BaseModel):
     success: bool
 
 
-@router.post("/create_user", response_model=CreateUserResponse, summary="Create a new user")
+@router.post("/user_create", response_model=CreateUserResponse, summary="Create a new user")
 def create_user(
         data: UserCreate,
         db: Annotated[Session, Depends(get_db)]
 ) -> CreateUserResponse:
     try:
         password_hasher = PasswordHasher()
-        UserService(db).create_user(data.name, data.email, password_hasher.hash(data.password),)
+        UserService(db).create_user(data.name, data.email, password_hasher.hash(data.password))
         db.commit()
         return CreateUserResponse(success=True)
     except:

@@ -20,6 +20,6 @@ def test_api_user_create() -> None:
 
     data = response.json()
 
-    assert data["sucess"] == True
+    assert data["success"] == True
     assert "password" not in data
     assert "password_hash" not in data
