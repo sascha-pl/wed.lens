@@ -8,6 +8,7 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.services.userservice import UserService
 
+
 client = TestClient(app)
 
 
@@ -24,30 +25,35 @@ def db() -> Session:
 def test_api_login(db: Session) -> None:
     password_hasher = PasswordHasher()
 
-    try:
-        UserService(db).create_user(
-            name="Jane Doe",
-            email="jane@example.com",
-            password_hash=password_hasher.hash("more-secret-password"),
-        )
+    UserService(db).create_user(
+        name="Jane Doe",
+        email="jane@example.com",
+        password_hash=password_hasher.hash("more-secret-password"),
+    )
 
-        db.commit()
+    db.commit()
 
-        response = client.post(
-            "/api/login",
-            json={
-                "email": "jane@example.com",
-                "password": "more-secret-password",
-            },
-        )
+    response = client.post(
+        "/api/login",
+        json={
+            "email": "jane@example.com",
+            "password": "more-secret-password",
+        },
+    )
 
-        assert response.status_code == 200
+    assert response.status_code == 200
 
-        data = response.json()
+    data = response.json()
 
-        assert data["success"] is True
-        assert "password" not in data
-        assert "password_hash" not in data
+    assert data["authenticated"] is True
 
-    finally:
-        db.close()
+    assert "session" not in data
+    assert "session_key" not in data
+    assert "password" not in data
+    assert "password_hash" not in data
+    assert "session_key" in response.cookies
+
+    session_key = response.cookies["session_key"]
+
+    assert isinstance(session_key, str)
+    assert len(session_key) == 64

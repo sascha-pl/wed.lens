@@ -1,13 +1,17 @@
 from typing import Annotated
+
 from argon2 import PasswordHasher
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.orm import Session
+
+from app.core import config
+from app.db.session import get_db
+from app.models.user import User
+from app.services.userservice import UserService
+
 
 router = APIRouter(tags=["system"])
-
-from app.db.session import get_db
-from app.services.userservice import UserService
 
 
 class UserCreate(BaseModel):
@@ -16,22 +20,45 @@ class UserCreate(BaseModel):
     password: str
 
 
-class CreateUserResponse(BaseModel):
-    success: bool
+class UserCreateResponse(BaseModel):
+    authenticated: bool
 
 
-@router.post("/user_create", response_model=CreateUserResponse, summary="Create a new user")
+@router.post(
+    "/user_create",
+    response_model=UserCreateResponse,
+    summary="Create a new user and create a session",
+)
 def create_user(
-        data: UserCreate,
-        db: Annotated[Session, Depends(get_db)]
-) -> CreateUserResponse:
+    data: UserCreate,
+    response: Response,
+    db: Annotated[Session, Depends(get_db)],
+) -> UserCreateResponse:
     try:
         password_hasher = PasswordHasher()
-        UserService(db).create_user(data.name, data.email, password_hasher.hash(data.password))
+        user_service = UserService(db)
+
+        user: User = user_service.create_user(
+            data.name,
+            data.email,
+            password_hasher.hash(data.password),
+        )
+
+        session = user_service.create_session(user)
+
         db.commit()
-        return CreateUserResponse(success=True)
-    except:
+
+        response.set_cookie(
+            key="session_key",
+            value=session.session_key,
+            httponly=True,
+            secure= config.get_settings().app_env != 'local',
+            samesite="lax",
+            max_age=60 * 60 * 24 * 180,
+        )
+
+        return UserCreateResponse(authenticated=True)
+
+    except Exception:
         db.rollback()
-        return CreateUserResponse(success=False)
-    finally:
-        db.close()
+        return UserCreateResponse(authenticated=False)
