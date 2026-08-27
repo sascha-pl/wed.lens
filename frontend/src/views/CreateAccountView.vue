@@ -19,7 +19,7 @@ async function createAccount() {
       return
     }
 
-  const response = await fetch("/api/user_create", {
+  const response = await fetch("/api/user/create", {
     method: "POST",
     credentials: "include",
     headers: {

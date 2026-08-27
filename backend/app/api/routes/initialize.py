@@ -31,12 +31,17 @@ def initialize(
     db: Annotated[Session, Depends(get_db)],
     session_key: str | None = Cookie(default=None),
 ) -> InitializeResponse:
+    if session_key is None:
+        return InitializeResponse(authenticated=False)
+
     user_service = UserService(db)
 
     user = user_service.get_user_from_session(session_key)
 
     if user is None:
         return InitializeResponse(authenticated=False)
+
+    user_service.touch_session(user)
 
     return InitializeResponse(
         authenticated=True,

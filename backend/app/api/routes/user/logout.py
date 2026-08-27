@@ -10,7 +10,7 @@ from app.services.userservice import UserService
 router = APIRouter(tags=["system"])
 
 
-@router.post("/logout")
+@router.post("/user/logout")
 def logout(
     response: Response,
     db: Annotated[Session, Depends(get_db)],

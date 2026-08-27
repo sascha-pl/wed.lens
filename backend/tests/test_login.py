@@ -34,7 +34,7 @@ def test_api_login(db: Session) -> None:
     db.commit()
 
     response = client.post(
-        "/api/login",
+        "/api/user/login",
         json={
             "email": "jane@example.com",
             "password": "more-secret-password",

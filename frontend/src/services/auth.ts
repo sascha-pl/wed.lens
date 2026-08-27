@@ -8,7 +8,7 @@ export function useAuth() {
 	const modal = useModal()
 
 	async function login(email: string, password: string) {
-		const response = await fetch("/api/login", {
+		const response = await fetch("/api/user/login", {
 			method: "POST",
 			credentials: "include",
 			headers: {
@@ -34,7 +34,7 @@ export function useAuth() {
 
 	async function logout() {
 		try {
-			const response = await fetch("/api/logout", {
+			const response = await fetch("/api/user/logout", {
 				method: "POST",
 				credentials: "include",
 			})
@@ -48,7 +48,6 @@ export function useAuth() {
 			return
 		}
 
-		// Only clear local state after successful logout.
 		userStore.clear()
 
 		await router.push("/")

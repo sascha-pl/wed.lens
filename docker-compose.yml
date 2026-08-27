@@ -37,6 +37,13 @@ services:
       retries: 10
       start_period: 5s
 
+  scheduler:
+    build: ./backend
+    command: python -m app.commands.scheduler
+    depends_on:
+      - db
+    restart: unless-stopped
+
   db:
     image: postgres:16-alpine
     environment:

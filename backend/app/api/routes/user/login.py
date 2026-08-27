@@ -24,7 +24,7 @@ class LoginUserResponse(BaseModel):
 
 
 @router.post(
-    "/login",
+    "/user/login",
     response_model=LoginUserResponse,
     summary="Login a user and create a session",
 )

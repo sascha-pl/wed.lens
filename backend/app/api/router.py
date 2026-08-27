@@ -2,9 +2,9 @@ from fastapi import APIRouter
 
 from app.api.routes.health import router as health_router
 from app.api.routes.initialize import router as initialize_router
-from app.api.routes.user_create import router as user_create_router
-from app.api.routes.login import router as login_router
-from app.api.routes.logout import router as logout_router
+from app.api.routes.user.create import router as user_create_router
+from app.api.routes.user.login import router as login_router
+from app.api.routes.user.logout import router as logout_router
 
 api_router = APIRouter()
 

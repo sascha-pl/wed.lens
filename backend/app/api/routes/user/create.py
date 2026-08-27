@@ -25,7 +25,7 @@ class UserCreateResponse(BaseModel):
 
 
 @router.post(
-    "/user_create",
+    "/user/create",
     response_model=UserCreateResponse,
     summary="Create a new user and create a session",
 )
