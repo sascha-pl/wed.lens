@@ -4,11 +4,9 @@ from fastapi import APIRouter, Cookie, Depends, Response
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.services.userservice import UserService
+from app.services.user_service import UserService
 
-
-router = APIRouter(tags=["system"])
-
+router = APIRouter(tags=["user"])
 
 @router.post("/user/logout")
 def logout(

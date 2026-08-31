@@ -1,7 +1,7 @@
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select, delete, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.models.user import User
@@ -50,7 +50,7 @@ class UserService:
         self,
         session_key: str,
     ) -> User | None:
-        statement = (
+        return self.db_session.scalar(
             select(User)
             .join(
                 UserSession,
@@ -59,8 +59,6 @@ class UserService:
             .where(UserSession.session_key == session_key)
         )
 
-        return self.db_session.scalar(statement)
-
     def create_session(self, user: User) -> UserSession:
         session = UserSession(
             session_key=secrets.token_hex(32),
@@ -68,35 +66,31 @@ class UserService:
         )
 
         self.db_session.add(session)
-        self.db_session.flush()
+        self.db_session.commit()
         self.db_session.refresh(session)
 
         return session
 
     def touch_session(self, user: User) -> None:
-        statement = (
-            update(UserSession).where(UserSession.user_id == user.id).values(date_last_used=datetime.now())
+        self.db_session.execute(
+            update(UserSession)
+            .where(UserSession.user_id == user.id)
+            .values(date_last_used=datetime.now(UTC))
         )
-
-        self.db_session.execute(statement)
         self.db_session.commit()
 
     def delete_session(self, session_key: str) -> None:
-        statement = delete(UserSession).where(
+        self.db_session.execute(delete(UserSession).where(
             UserSession.session_key == session_key
-        )
-
-        self.db_session.execute(statement)
+        ))
         self.db_session.commit()
 
-    def cleanup(self) -> None:
+    def cleanUp(self) -> None:
         #Delete expired sessions
-        expiry_cutoff = datetime.now(timezone.utc) - SESSION_EXPIRY
+        expiry_cutoff = datetime.now(UTC) - SESSION_EXPIRY
 
-        statement = (
+        self.db_session.execute(
             delete(UserSession)
             .where(UserSession.date_last_used < expiry_cutoff)
         )
-
-        self.db_session.execute(statement)
         self.db_session.commit()

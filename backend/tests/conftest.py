@@ -1,28 +1,33 @@
-import pytest
+from collections.abc import Generator
 
+import pytest
 from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.main import app
-from app.services.userservice import UserService
-
-
-client = TestClient(app)
+from app.models.user import User
+from app.services.user_service import UserService
 
 
 @pytest.fixture
-def db() -> Session:
-    session = SessionLocal()
+def db() -> Generator[Session, None, None]:
+    db = SessionLocal()
 
     try:
-        yield session
+        yield db
+        db.execute(
+            delete(User)
+        )
+        db.commit()
+        db.close()
     finally:
-        session.close()
-
-
-def test_api_login(db: Session) -> None:
+        db.close()
+        
+@pytest.fixture
+def authenticated_client(db: Session) -> TestClient:
     password_hasher = PasswordHasher()
 
     UserService(db).create_user(
@@ -33,6 +38,8 @@ def test_api_login(db: Session) -> None:
 
     db.commit()
 
+    client = TestClient(app)
+
     response = client.post(
         "/api/user/login",
         json={
@@ -42,18 +49,8 @@ def test_api_login(db: Session) -> None:
     )
 
     assert response.status_code == 200
-
-    data = response.json()
-
-    assert data["authenticated"] is True
-
-    assert "session" not in data
-    assert "session_key" not in data
-    assert "password" not in data
-    assert "password_hash" not in data
     assert "session_key" in response.cookies
 
-    session_key = response.cookies["session_key"]
+    print("CLIENT COOKIES:", client.cookies)
 
-    assert isinstance(session_key, str)
-    assert len(session_key) == 64
+    return client

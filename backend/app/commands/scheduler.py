@@ -1,7 +1,7 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from app.commands.daily import main as daily
-
+from app.commands.five_minutely import main as five_minutely
 
 scheduler = BlockingScheduler()
 
@@ -14,12 +14,12 @@ scheduler.add_job(
 )
 
 
-# scheduler.add_job(
-#     some_hourly_job,
-#     trigger="interval",
-#     hours=1,
-#     id="hourly_job",
-# )
+scheduler.add_job(
+    five_minutely,
+    trigger="interval",
+    minutes=5,
+    id="hourly_job",
+)
 
 
 if __name__ == "__main__":

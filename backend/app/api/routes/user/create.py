@@ -8,12 +8,9 @@ from sqlalchemy.orm import Session
 from app.core import config
 from app.db.session import get_db
 from app.models.user import User
-from app.services.userservice import UserService
+from app.services.user_service import UserService
 
-
-router = APIRouter(tags=["system"])
-
-
+router = APIRouter(tags=["user"])
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
@@ -59,6 +56,6 @@ def create_user(
 
         return UserCreateResponse(authenticated=True)
 
-    except Exception:
+    except Exception:  # noqa: BLE001
         db.rollback()
         return UserCreateResponse(authenticated=False)

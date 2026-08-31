@@ -7,7 +7,7 @@ client = TestClient(app)
 
 def test_api_user_create() -> None:
     response = client.post(
-        "/api/user_create",
+        "/api/user/create",
         json={
             "name": "John Doe",
             "email": "john@example.com",

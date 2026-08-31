@@ -1,14 +1,17 @@
 from app.db.session import SessionLocal
-from app.services.user_service import UserService
+from app.services.photo_service import PhotoService
+from app.services.storage.local_db import LocalDatabaseStorageService
 
 
 def main() -> None:
     db_session = SessionLocal()
 
     try:
-        user_service = UserService(db_session)
+        ldb = LocalDatabaseStorageService(db_session)
 
-        user_service.cleanUp()
+        PhotoService(db_session=db_session).cleanUp(storage_service=ldb)
+
+        ldb.cleanUp()
 
         db_session.commit()
     except Exception:

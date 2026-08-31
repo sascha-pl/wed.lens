@@ -7,12 +7,10 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.services.userservice import UserService
 from app.models.user import User
+from app.services.user_service import UserService
 
-
-router = APIRouter(tags=["system"])
-
+router = APIRouter(tags=["user"])
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -47,6 +45,8 @@ def login(
         return LoginUserResponse(authenticated=False)
 
     session = user_service.create_session(user)
+
+    db.commit()
 
     from app.core import config
     response.set_cookie(

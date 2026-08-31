@@ -1,12 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
+from app.api.auth import get_current_user
 from app.db.session import get_db
-from app.services.userservice import UserService
-
+from app.models.user import User
+from app.services.user_service import UserService
 
 router = APIRouter(tags=["system"])
 
@@ -29,18 +30,13 @@ class InitializeResponse(BaseModel):
 def initialize(
     *,
     db: Annotated[Session, Depends(get_db)],
-    session_key: str | None = Cookie(default=None),
+    user: Annotated[User | None, Depends(get_current_user)],
 ) -> InitializeResponse:
-    if session_key is None:
-        return InitializeResponse(authenticated=False)
-
-    user_service = UserService(db)
-
-    user = user_service.get_user_from_session(session_key)
 
     if user is None:
         return InitializeResponse(authenticated=False)
 
+    user_service = UserService(db)
     user_service.touch_session(user)
 
     return InitializeResponse(
